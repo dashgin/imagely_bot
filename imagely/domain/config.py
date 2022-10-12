@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, Field
 
 
 class Settings(BaseSettings):
@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     VERSION: str = "0.1.0"
     LOG_LEVEL: str = "info"
+
     SWAGGER_META: dict = {
         "contact": {
             "name": "Dashgin Khudiyev",
@@ -32,8 +33,15 @@ class Settings(BaseSettings):
         ],
     }
 
+    TG_BOT_TOKEN: str = Field(..., env="TG_BOT_TOKEN")
+
     class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
 
 
 settings = Settings()
+
+if __name__ == "__main__":
+    print(settings.TG_BOT_TOKEN)

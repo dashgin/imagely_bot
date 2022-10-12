@@ -1,4 +1,4 @@
-from imagely.entrypoints.api.main import main
+from imagely.service.bg_remover import bot_main
 
 if __name__ == "__main__":
-    main()
+    bot_main()

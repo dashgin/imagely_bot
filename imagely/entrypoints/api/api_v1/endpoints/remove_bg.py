@@ -19,7 +19,8 @@ class ModelType(str, Enum):
     U2NET_HUMAN_SEG = "u2net_human_seg"
     U2NET_CLOTH_SEG = "u2net_cloth_seg"
 
-@dataclass  
+
+@dataclass
 class CommonQueryPostParams:
     model: ModelType = Form(
         default=ModelType.U2NET,
@@ -50,21 +51,17 @@ router = APIRouter()
 
 
 def im_without_bg(content: bytes, commons: CommonQueryPostParams) -> Response:
-    return Response(
-        remove(
-            content,
-            session=sessions.setdefault(
-                commons.model.value, new_session(commons.model.value)
-            ),
-            alpha_matting=commons.a_m,
-            alpha_matting_foreground_threshold=commons.a_m_foreground_threshold,
-            alpha_matting_background_threshold=commons.a_m_background_threshold,
-            alpha_matting_erode_size=commons.a_m_erode_size,
-            only_mask=commons.only_mask,
-            post_process_mask=commons.post_process_mask,
+    return remove(
+        content,
+        session=sessions.setdefault(
+            commons.model.value, new_session(commons.model.value)
         ),
-        media_type="image/png",
-        status_code=200,
+        alpha_matting=commons.a_m,
+        alpha_matting_foreground_threshold=commons.a_m_foreground_threshold,
+        alpha_matting_background_threshold=commons.a_m_background_threshold,
+        alpha_matting_erode_size=commons.a_m_erode_size,
+        only_mask=commons.only_mask,
+        post_process_mask=commons.post_process_mask,
     )
 
 
@@ -74,14 +71,14 @@ def im_without_bg(content: bytes, commons: CommonQueryPostParams) -> Response:
     description="Removes the background from an image sent within the request itself.",
 )
 async def remove_bg(
-        file: UploadFile = File(
-            default=None,
-            description="Image file (byte stream) that has to be processed.",
-        ),
-        url: str = Query(
-            default=None, description="URL of the image that has to be processed."
-        ),
-        commons: CommonQueryPostParams = Depends(),
+    file: UploadFile = File(
+        default=None,
+        description="Image file (byte stream) that has to be processed.",
+    ),
+    url: str = Query(
+        default=None, description="URL of the image that has to be processed."
+    ),
+    commons: CommonQueryPostParams = Depends(),
 ):
     if url:
         content = await aget(url)
@@ -89,4 +86,8 @@ async def remove_bg(
         content = file
     else:
         return Response(status_code=400)
-    return await asyncify(im_without_bg)(content, commons)
+    return Response(
+        await asyncify(im_without_bg)(content, commons),
+        media_type="image/png",
+        status_code=200,
+    )

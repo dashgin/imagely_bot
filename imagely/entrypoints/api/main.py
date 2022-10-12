@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from imagely.entrypoints.api.api_v1.api import api_router
-from imagely.entrypoints.api.config import settings
+from imagely.domain.config import settings
 from imagely.entrypoints.api.utils import thread_check
 from starlette.responses import RedirectResponse
 
