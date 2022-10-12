@@ -1,11 +1,14 @@
+from dataclasses import dataclass
 from enum import Enum
 
+from asyncer import asyncify
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from rembg.bg import remove
 from rembg.session_base import BaseSession
 from rembg.session_factory import new_session
-from imagely.entrypoints.api.utils import aget
 from starlette.responses import Response
+
+from imagely.entrypoints.api.utils import aget
 
 sessions: dict[str, BaseSession] = {}
 
@@ -16,9 +19,8 @@ class ModelType(str, Enum):
     U2NET_HUMAN_SEG = "u2net_human_seg"
     U2NET_CLOTH_SEG = "u2net_cloth_seg"
 
-
+@dataclass  
 class CommonQueryPostParams:
-
     model: ModelType = Form(
         default=ModelType.U2NET,
         description="Model to use when processing image",
@@ -47,28 +49,7 @@ class CommonQueryPostParams:
 router = APIRouter()
 
 
-@router.post(
-    path="/",
-    summary="Remove from Stream or File",
-    description="Removes the background from an image sent within the request itself.",
-)
-async def remove_bg(
-    file: UploadFile = File(
-        default=None,
-        description="Image file (byte stream) that has to be processed.",
-    ),
-    url: str = Query(
-        default=None, description="URL of the image that has to be processed."
-    ),
-    commons: CommonQueryPostParams = Depends(),
-):
-    if url:
-        content = await aget(url)
-    elif file:
-        content = await file.read()
-    else:
-        raise ValueError("No file or url provided")
-
+def im_without_bg(content: bytes, commons: CommonQueryPostParams) -> Response:
     return Response(
         remove(
             content,
@@ -85,3 +66,27 @@ async def remove_bg(
         media_type="image/png",
         status_code=200,
     )
+
+
+@router.post(
+    path="/",
+    summary="Remove from Stream or File",
+    description="Removes the background from an image sent within the request itself.",
+)
+async def remove_bg(
+        file: UploadFile = File(
+            default=None,
+            description="Image file (byte stream) that has to be processed.",
+        ),
+        url: str = Query(
+            default=None, description="URL of the image that has to be processed."
+        ),
+        commons: CommonQueryPostParams = Depends(),
+):
+    if url:
+        content = await aget(url)
+    elif file:
+        content = file
+    else:
+        return Response(status_code=400)
+    return await asyncify(im_without_bg)(content, commons)
