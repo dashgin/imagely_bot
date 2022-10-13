@@ -17,7 +17,9 @@ class ModelType(str, Enum):
     U2NET_CLOTH_SEG = "u2net_cloth_seg"
 
 
-def remove_bg(content: bytes, **kwargs) -> Union[bytes, PILImage, np.ndarray]:
+def remove_bg(content: Union[bytes, PILImage, np.ndarray, bytearray], **kwargs) -> Union[bytes, PILImage, np.ndarray]:
+    if isinstance(content, bytearray):
+        content = bytes(content)
     return remove(
         content,
         **kwargs,
