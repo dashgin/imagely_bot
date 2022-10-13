@@ -1,4 +1,0 @@
-THREADS = None
-PORT = 8000
-VERSION = "0.1.0"
-LOG_LEVEL = "info"

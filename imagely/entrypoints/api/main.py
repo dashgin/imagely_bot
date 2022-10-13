@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from imagely.entrypoints.api.api_v1.api import api_router
-from imagely.domain.config import settings
+from imagely.entrypoints.api.config import settings
 from imagely.entrypoints.api.utils import thread_check
 from starlette.responses import RedirectResponse
 
@@ -25,7 +25,7 @@ app.add_middleware(
 
 @app.get("/", include_in_schema=False)
 def docs_redirect():
-    return RedirectResponse(f"/docs")
+    return RedirectResponse("/docs")
 
 
 @app.on_event("startup")
@@ -36,7 +36,7 @@ def startup():
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-def main():
+def run_api():
     uvicorn.run(
         "imagely.entrypoints.api.main:app",
         host="0.0.0.0",

@@ -1,8 +1,6 @@
-from enum import Enum
 import uuid
 from dataclasses import asdict, dataclass, field
 
-from fastapi import Form, Query
 from imagely.domain.validators import is_jpeg
 
 
@@ -23,5 +21,3 @@ class JPG:
 @is_jpeg
 def allocate_jpeg(code: uuid.UUID, src_path: str) -> JPG:
     return JPG(code=code, src_path=src_path)
-
-

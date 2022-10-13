@@ -1,14 +1,11 @@
-from dataclasses import dataclass
 from enum import Enum
 
-from asyncer import asyncify
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from rembg.bg import remove
 from rembg.session_base import BaseSession
 from rembg.session_factory import new_session
-from starlette.responses import Response
-
 from imagely.entrypoints.api.utils import aget
+from starlette.responses import Response
 
 sessions: dict[str, BaseSession] = {}
 
@@ -20,8 +17,8 @@ class ModelType(str, Enum):
     U2NET_CLOTH_SEG = "u2net_cloth_seg"
 
 
-@dataclass
 class CommonQueryPostParams:
+
     model: ModelType = Form(
         default=ModelType.U2NET,
         description="Model to use when processing image",
@@ -50,21 +47,6 @@ class CommonQueryPostParams:
 router = APIRouter()
 
 
-def im_without_bg(content: bytes, commons: CommonQueryPostParams) -> Response:
-    return remove(
-        content,
-        session=sessions.setdefault(
-            commons.model.value, new_session(commons.model.value)
-        ),
-        alpha_matting=commons.a_m,
-        alpha_matting_foreground_threshold=commons.a_m_foreground_threshold,
-        alpha_matting_background_threshold=commons.a_m_background_threshold,
-        alpha_matting_erode_size=commons.a_m_erode_size,
-        only_mask=commons.only_mask,
-        post_process_mask=commons.post_process_mask,
-    )
-
-
 @router.post(
     path="/",
     summary="Remove from Stream or File",
@@ -83,11 +65,23 @@ async def remove_bg(
     if url:
         content = await aget(url)
     elif file:
-        content = file
+        content = await file.read()
     else:
-        return Response(status_code=400)
+        raise ValueError("No file or url provided")
+
     return Response(
-        await asyncify(im_without_bg)(content, commons),
+        remove(
+            content,
+            session=sessions.setdefault(
+                commons.model.value, new_session(commons.model.value)
+            ),
+            alpha_matting=commons.a_m,
+            alpha_matting_foreground_threshold=commons.a_m_foreground_threshold,
+            alpha_matting_background_threshold=commons.a_m_background_threshold,
+            alpha_matting_erode_size=commons.a_m_erode_size,
+            only_mask=commons.only_mask,
+            post_process_mask=commons.post_process_mask,
+        ),
         media_type="image/png",
         status_code=200,
     )
