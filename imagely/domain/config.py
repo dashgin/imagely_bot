@@ -34,14 +34,15 @@ class Settings(BaseSettings):
     }
 
     TG_BOT_TOKEN: str = Field(..., env="TG_BOT_TOKEN")
-
+    TESSERACT_PATH: str = Field(..., env="TESSERACT_PATH")
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
 
 
-settings = Settings() # type: ignore
+settings = Settings()
 
 if __name__ == "__main__":
     print(settings.TG_BOT_TOKEN)
+    print(settings.TESSERACT_PATH)
