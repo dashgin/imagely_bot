@@ -2,3 +2,8 @@
 __pycache__
 .idea
 typings
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
